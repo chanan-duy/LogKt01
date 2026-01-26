@@ -18,7 +18,7 @@ public class TaskManagerService
 
 	public async Task<List<TaskDto>> GetAllTasks()
 	{
-		_logger.LogTrace("Fetching all tasks from database");
+		_logger.LogTrace("Fetching all tasks from db");
 
 		var tasks = _context.Tasks
 			.Where(x => !x.IsMarkedAsRemoved)
@@ -45,13 +45,13 @@ public class TaskManagerService
 
 		if (string.IsNullOrEmpty(title) || title.Length > 80)
 		{
-			_logger.LogWarning("Validation failed: Title is invalid");
+			_logger.LogWarning("Validation failed. Title is invalid");
 			return false;
 		}
 
 		if (string.IsNullOrEmpty(category) || category.Length > 50)
 		{
-			_logger.LogWarning("Validation failed: Category is invalid");
+			_logger.LogWarning("Validation failed. Category is invalid");
 			return false;
 		}
 
