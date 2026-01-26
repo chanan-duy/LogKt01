@@ -17,13 +17,15 @@
 				       @bind:event="oninput"
 				       @onkeyup="HandleEnter"
 				       class="form-control"
-				       placeholder="Task title..."/>
+				       placeholder="Task title..."
+				       maxlength="80"/>
 
 				<input @bind="_newTaskCategory"
 				       @bind:event="oninput"
 				       @onkeyup="HandleEnter"
 				       class="form-control"
-				       placeholder="Category..."/>
+				       placeholder="Category..."
+				       maxlength="50"/>
 
 				<button class="btn btn-primary" @onclick="AddTask" disabled="@_isProcessing">
 					@(_isProcessing ? "Adding..." : "Add Task")
@@ -36,12 +38,14 @@
 		</div>
 	</div>
 
-	<h3>Task List:</h3>
+	<h3>Task List</h3>
 
 	@if (_isLoading)
 	{
-		<div class="spinner-border text-primary" role="status">
-			<span class="visually-hidden">Loading...</span>
+		<div class="d-flex justify-content-center my-5">
+			<div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
 		</div>
 	}
 	else if (_tasks.Any())
@@ -50,25 +54,35 @@
 			@{ var counter = 1; }
 			@foreach (var task in _tasks)
 			{
-				<li class="list-group-item d-flex justify-content-between align-items-center">
-					<div>
-						<span class="fw-bold me-2">@(counter++).</span>
+				<li class="list-group-item d-flex justify-content-between align-items-center @(task.IsDone ? "bg-light" : "")">
+					<div class="d-flex align-items-center flex-grow-1">
+						<span class="fw-bold me-3 text-secondary">@(counter++).</span>
+
+						<input type="checkbox"
+						       class="form-check-input me-3"
+						       checked="@task.IsDone"
+						       @onchange="() => ToggleTask(task.Id)"/>
 
 						@if (!string.IsNullOrEmpty(task.Category))
 						{
-							<span class="badge bg-secondary me-2">@task.Category</span>
+							<span class="badge bg-secondary me-2 @(task.IsDone ? "opacity-50" : "")">@task.Category</span>
 						}
 
-						@task.Title
+						<span class="@(task.IsDone ? "text-decoration-line-through text-muted" : "fw-medium")">
+							@task.Title
+						</span>
 					</div>
-					<button class="btn btn-danger btn-sm" @onclick="() => RemoveTask(task.Id)">Remove</button>
+
+					<button class="btn btn-danger btn-sm ms-3" @onclick="() => RemoveTask(task.Id)">
+						Remove
+					</button>
 				</li>
 			}
 		</ul>
 	}
 	else
 	{
-		<div class="alert alert-info">Empty</div>
+		<div class="alert alert-info">No tasks found. Add one above!</div>
 	}
 </div>
 
@@ -83,6 +97,7 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		Logger.LogTrace("Home component initialized");
 		await LoadTasks();
 	}
 
@@ -90,8 +105,10 @@
 	{
 		try
 		{
+			Logger.LogTrace("Loading tasks for UI");
 			_isLoading = true;
 			_tasks = await TaskManager.GetAllTasks();
+			Logger.LogInformation("Loaded {Count} tasks", _tasks.Count);
 		}
 		catch (Exception e)
 		{
@@ -109,19 +126,21 @@
 		if (string.IsNullOrWhiteSpace(_newTaskTitle))
 		{
 			_errorMessage = "Title can't be empty";
+			Logger.LogWarning("User attempted to add task with empty title");
 			return;
 		}
 
 		if (string.IsNullOrWhiteSpace(_newTaskCategory))
 		{
 			_errorMessage = "Category can't be empty";
+			Logger.LogWarning("User attempted to add task with empty category");
 			return;
 		}
 
 		_isProcessing = true;
 		_errorMessage = "";
 
-		Logger.LogInformation("Adding task: {Title} - {Category}", _newTaskTitle, _newTaskCategory);
+		Logger.LogInformation("User initiating task creation: {Title} [{Category}]", _newTaskTitle, _newTaskCategory);
 
 		try
 		{
@@ -129,18 +148,20 @@
 
 			if (success)
 			{
+				Logger.LogInformation("Task creation successful");
 				_newTaskTitle = "";
 				_newTaskCategory = "";
 				await LoadTasks();
 			}
 			else
 			{
+				Logger.LogWarning("Service returned false for AddTask");
 				_errorMessage = "Error while adding task";
 			}
 		}
 		catch (Exception ex)
 		{
-			Logger.LogError(ex, "Error while adding task");
+			Logger.LogError(ex, "Exception thrown while adding task");
 			_errorMessage = "Unexpected error occurred";
 		}
 		finally
@@ -149,16 +170,57 @@
 		}
 	}
 
+	private async Task ToggleTask(int id)
+	{
+		Logger.LogInformation("User toggling completion status for task {Id}", id);
+		try
+		{
+			var success = await TaskManager.ToggleTaskStatus(id);
+			if (success)
+			{
+				await LoadTasks();
+			}
+			else
+			{
+				Logger.LogWarning("Failed to toggle task {Id}", id);
+				_errorMessage = "Could not update task status";
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "Error toggling task {Id}", id);
+			_errorMessage = "Error updating task";
+		}
+	}
+
 	private async Task RemoveTask(int id)
 	{
-		await TaskManager.RemoveTask(id);
-		await LoadTasks();
+		Logger.LogInformation("User initiating removal of task {Id}", id);
+		try
+		{
+			var success = await TaskManager.RemoveTask(id);
+			if (success)
+			{
+				await LoadTasks();
+			}
+			else
+			{
+				Logger.LogWarning("Failed to remove task {Id}", id);
+				_errorMessage = "Could not remove task";
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "Error removing task {Id}", id);
+			_errorMessage = "Error removing task";
+		}
 	}
 
 	private async Task HandleEnter(KeyboardEventArgs e)
 	{
 		if (e.Key == "Enter")
 		{
+			Logger.LogTrace("Enter key pressed in input field");
 			await AddTask();
 		}
 	}
