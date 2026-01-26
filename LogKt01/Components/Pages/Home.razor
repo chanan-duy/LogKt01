@@ -134,12 +134,27 @@
 			return;
 		}
 
+		if (_newTaskTitle.Length > 80)
+		{
+			_errorMessage = "Title can't > 80 chars";
+			Logger.LogWarning("User attempted to add task with title > 80 chars");
+			return;
+		}
+
 		if (string.IsNullOrWhiteSpace(_newTaskCategory))
 		{
 			_errorMessage = "Category can't be empty";
 			Logger.LogWarning("User attempted to add task with empty category");
 			return;
 		}
+
+		if (_newTaskCategory.Length > 50)
+		{
+			_errorMessage = "Category can't > 80 chars";
+			Logger.LogWarning("User attempted to add task with category > 50 chars");
+			return;
+		}
+
 
 		_isProcessing = true;
 		_errorMessage = "";
