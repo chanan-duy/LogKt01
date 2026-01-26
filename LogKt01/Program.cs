@@ -1,6 +1,8 @@
 using LogKt01.Components;
 using LogKt01.Data;
+using LogKt01.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
 
 namespace LogKt01;
 
@@ -10,6 +12,14 @@ public class Program
 	{
 		var builder = WebApplication.CreateBuilder(args);
 
+		builder.Logging.AddSimpleConsole(options =>
+		{
+			options.UseUtcTimestamp = true;
+			options.TimestampFormat = "[HH:mm:ss] ";
+			options.ColorBehavior = LoggerColorBehavior.Enabled;
+		});
+
+
 		builder.Services.AddRazorComponents()
 			.AddInteractiveServerComponents();
 
@@ -18,6 +28,8 @@ public class Program
 			options.UseSqlite(builder.Configuration.GetConnectionString("AppDbContext") ??
 			                  throw new InvalidOperationException("Connection string 'AppDbContext' not found."));
 		});
+
+		builder.Services.AddScoped<TaskManagerService>();
 
 		var app = builder.Build();
 
