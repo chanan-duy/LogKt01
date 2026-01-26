@@ -25,7 +25,9 @@ public class Program
 		{
 			app.UseExceptionHandler("/Error");
 			app.UseHsts();
-
+		}
+		else
+		{
 			using var scope = app.Services.CreateScope();
 			var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
