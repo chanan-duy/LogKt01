@@ -17,5 +17,16 @@ public class AppDbContext : DbContext
 		modelBuilder.Entity<TaskEntity>()
 			.Property(x => x.Id)
 			.ValueGeneratedOnAdd();
+
+		foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+		{
+			foreach (var property in entityType.GetProperties())
+			{
+				if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+				{
+					property.SetValueConverter(new DateTimeUtcConverter());
+				}
+			}
+		}
 	}
 }
