@@ -6,3 +6,4 @@ riderModule.iml
 *.sln.DotSettings.user
 *DbContext.db
 *DbContext.db-*
+*/logs/*
