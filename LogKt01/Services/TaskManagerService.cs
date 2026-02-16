@@ -66,10 +66,8 @@ public class TaskManagerService
 		});
 
 		_logger.LogTrace(
-			"Attempting to add task. Category: {Category}, TitleLength: {TitleLength}, CategoryLength: {CategoryLength}",
-			category,
-			title?.Length ?? 0,
-			category?.Length ?? 0);
+			"Attempting to add task. Category: {Category}",
+			category);
 
 		if (string.IsNullOrEmpty(title) || title.Length > 80)
 		{
@@ -128,12 +126,12 @@ public class TaskManagerService
 			["TaskId"] = id,
 		});
 
-		_logger.LogTrace("Toggling task status. TaskId: {TaskId}", id);
+		_logger.LogTrace("Toggling task status.");
 
 		var task = await _context.Tasks.FirstOrDefaultAsync(x => x.Id == id && !x.IsMarkedAsRemoved);
 		if (task == null)
 		{
-			_logger.LogWarning(LogEvents.ToggleTaskNotFound, "Task not found or already removed. TaskId: {TaskId}", id);
+			_logger.LogWarning(LogEvents.ToggleTaskNotFound, "Task not found or already removed.");
 			return false;
 		}
 
@@ -144,8 +142,7 @@ public class TaskManagerService
 
 		_logger.LogInformation(
 			LogEvents.ToggleTaskCompleted,
-			"Task status updated. TaskId: {TaskId}, PreviousIsDone: {PreviousIsDone}, CurrentIsDone: {CurrentIsDone}, ElapsedMs: {ElapsedMs}",
-			id,
+			"Task status updated. PreviousIsDone: {PreviousIsDone}, CurrentIsDone: {CurrentIsDone}, ElapsedMs: {ElapsedMs}",
 			previousIsDone,
 			task.IsDone,
 			stopwatch.ElapsedMilliseconds);
@@ -163,12 +160,12 @@ public class TaskManagerService
 			["TaskId"] = id,
 		});
 
-		_logger.LogTrace("Attempting to remove task. TaskId: {TaskId}", id);
+		_logger.LogTrace("Attempting to remove task.");
 
 		var task = await _context.Tasks.FirstOrDefaultAsync(x => x.Id == id && !x.IsMarkedAsRemoved);
 		if (task == null)
 		{
-			_logger.LogWarning(LogEvents.RemoveTaskNotFound, "Task not found for removal. TaskId: {TaskId}", id);
+			_logger.LogWarning(LogEvents.RemoveTaskNotFound, "Task not found for removal.");
 			return false;
 		}
 
@@ -178,8 +175,7 @@ public class TaskManagerService
 
 		_logger.LogInformation(
 			LogEvents.RemoveTaskCompleted,
-			"Task marked as removed. TaskId: {TaskId}, RemovedAtUtc: {RemovedAtUtc}, ElapsedMs: {ElapsedMs}",
-			id,
+			"Task marked as removed. RemovedAtUtc: {RemovedAtUtc}, ElapsedMs: {ElapsedMs}",
 			DateTime.UtcNow,
 			stopwatch.ElapsedMilliseconds);
 
