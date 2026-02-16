@@ -39,7 +39,17 @@ public class Program
 
 			var app = builder.Build();
 
-			app.UseSerilogRequestLogging();
+			app.UseSerilogRequestLogging(options =>
+			{
+				options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+				options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+				{
+					diagnosticContext.Set("TraceId", httpContext.TraceIdentifier);
+					diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+					diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+					diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+				};
+			});
 
 			if (!app.Environment.IsDevelopment())
 			{
